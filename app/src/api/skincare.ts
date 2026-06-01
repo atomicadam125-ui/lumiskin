@@ -1,4 +1,4 @@
-import { api, cvApi } from "@/api/client";
+import { api } from "@/api/client";
 import type {
   Analysis,
   CVAnalysisScores,
@@ -44,18 +44,10 @@ export async function generateRecommendation(payload: RecommendationInput) {
   return response.data;
 }
 
-export async function analyzeImageLocally(image: { uri: string; name: string; type: string }) {
-  const form = new FormData();
-  form.append("file", {
-    uri: image.uri,
-    name: image.name,
-    type: image.type,
-  } as unknown as string);
-
-  const response = await cvApi.post<CVAnalysisScores>("/analyze", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return response.data;
+export async function analyzeImageLocally(
+  _image: { uri: string; name: string; type: string },
+): Promise<CVAnalysisScores | null> {
+  return null;
 }
 
 export async function getHistory() {

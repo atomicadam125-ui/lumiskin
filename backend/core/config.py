@@ -14,14 +14,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 14
-    database_url: str
-    storage_backend: str = "s3"
+    database_url: str = "sqlite+pysqlite:///./preview.db"
     local_upload_dir: str = "local_uploads"
-    aws_access_key_id: str | None = None
-    aws_secret_access_key: str | None = None
-    aws_region: str = "us-east-1"
-    s3_bucket_name: str
-    s3_public_base_url: str | None = None
     openai_api_key: str | None = None
     openai_model: str = "gpt-4.1-mini"
     apple_client_ids: list[str] = []

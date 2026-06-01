@@ -1,11 +1,13 @@
 import Constants from "expo-constants";
 
 const extra = Constants.expoConfig?.extra as
-  | { apiBaseUrl?: string; cvBaseUrl?: string; privacyPolicyUrl?: string }
+  | { apiBaseUrl?: string; privacyPolicyUrl?: string }
   | undefined;
 
 export const appConfig = {
-  apiBaseUrl: extra?.apiBaseUrl ?? "http://localhost:8000/api/v1",
-  cvBaseUrl: extra?.cvBaseUrl ?? "http://localhost:8010/v1",
+  apiBaseUrl:
+    process.env.EXPO_PUBLIC_API_BASE_URL ??
+    extra?.apiBaseUrl ??
+    "http://localhost:8000/api/v1",
   privacyPolicyUrl: extra?.privacyPolicyUrl?.trim() || null,
 };

@@ -30,7 +30,7 @@ testpaths = ["tests"]
 pythonpath = ["."]
 
 [tool.setuptools.packages.find]
-include = ["api*", "core*", "cv_service*", "db*", "models*", "schemas*", "services*"]
+include = ["api*", "controllers*", "core*", "db*", "models*", "schemas*", "services*"]
 
 [tool.ruff]
 line-length = 100

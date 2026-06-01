@@ -10,22 +10,88 @@ from sqlalchemy.pool import StaticPool
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key-that-is-long-enough-for-jwt")
 os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite://")
-os.environ.setdefault("S3_BUCKET_NAME", "test-bucket")
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 import models  # noqa: F401, E402
-from api.deps import get_recommendation_client, get_storage_service  # noqa: E402
+from api.deps import (  # noqa: E402
+    get_recommendation_client,
+    get_skin_analysis_client,
+    get_storage_service,
+)
 from db.base import Base  # noqa: E402
 from db.session import get_db  # noqa: E402
 from main import create_app  # noqa: E402
+from schemas.skin_analysis import (  # noqa: E402
+    ConditionScore,
+    RecommendedProduct,
+    RoutineStep,
+    SkinAnalysisResult,
+    SkinScores,
+)
 
 
 class FakeStorageService:
-    def upload_user_image(self, user_id: UUID, data: bytes, content_type: str) -> str:
-        return f"users/{user_id}/photos/fake-image.jpg"
+    files: dict[str, bytes] = {}
+
+    def save_user_image(self, user_id: UUID, data: bytes, content_type: str) -> str:
+        key = f"users/{user_id}/photos/fake-image.jpg"
+        self.files[key] = data
+        return key
+
+    def read_image(self, key: str) -> bytes:
+        return self.files[key]
 
     def delete_user_images(self, user_id: UUID) -> None:
         return None
+
+
+class FakeSkinAnalysisClient:
+    model = "fake-vision-model"
+
+    def analyze(
+        self, images: list[tuple[bytes, str]], questionnaire: dict | None
+    ) -> SkinAnalysisResult:
+        assert images
+        return SkinAnalysisResult(
+            overall_skin_score=74,
+            skin_type=questionnaire["skin_type"] if questionnaire else "unknown",
+            confidence=88,
+            scores=SkinScores(
+                acne=ConditionScore(score=72, severity="moderate", observation="Visible blemishes"),
+                redness=ConditionScore(score=30, severity="mild", observation="Mild redness"),
+                hyperpigmentation=ConditionScore(
+                    score=40, severity="mild", observation="Some uneven tone"
+                ),
+                fine_lines=ConditionScore(score=15, severity="low", observation="Minimal lines"),
+                pores=ConditionScore(score=35, severity="mild", observation="Visible pores"),
+                oiliness=ConditionScore(score=70, severity="moderate", observation="Shine visible"),
+                dryness=ConditionScore(score=20, severity="mild", observation="Mild dryness"),
+            ),
+            primary_concerns=["acne", "oiliness"],
+            objective_summary="Combination skin with moderate blemish and oil concerns.",
+            routine=[
+                RoutineStep(
+                    step=1,
+                    time_of_day="both",
+                    category="cleanser",
+                    instruction="Use a gentle low-pH cleanser.",
+                    frequency="daily",
+                )
+            ],
+            recommended_products=[
+                RecommendedProduct(
+                    product_name="Low pH Good Morning Gel Cleanser",
+                    brand="COSRX",
+                    category="cleanser",
+                    routine_step="cleanse",
+                    why_chosen="Gentle option for combination skin.",
+                    how_to_use="Massage onto damp skin and rinse.",
+                    caution=None,
+                )
+            ],
+            dermatologist_warning="Seek dermatologist care for painful or worsening lesions.",
+            disclaimer="Cosmetic analysis only; not a diagnosis.",
+        )
 
 
 class FakeRecommendationClient:
@@ -75,6 +141,7 @@ def client(db_session: Session) -> Generator[TestClient, None, None]:
 
     app.dependency_overrides[get_db] = override_db
     app.dependency_overrides[get_storage_service] = FakeStorageService
+    app.dependency_overrides[get_skin_analysis_client] = FakeSkinAnalysisClient
     app.dependency_overrides[get_recommendation_client] = FakeRecommendationClient
 
     with TestClient(app) as test_client:

@@ -8,12 +8,13 @@ import { Card } from "@/components/Card";
 import { Screen } from "@/components/Screen";
 import { TextField } from "@/components/TextField";
 import { spacing } from "@/constants/theme";
-import { useRegister } from "@/hooks/useAuth";
+import { useRegister, useSkipLocalAuth } from "@/hooks/useAuth";
 
 type RegisterForm = { full_name: string; email: string; password: string };
 
 export default function RegisterScreen() {
   const register = useRegister();
+  const skipLocalAuth = useSkipLocalAuth();
   const { control, handleSubmit } = useForm<RegisterForm>({
     defaultValues: { full_name: "", email: "", password: "" },
   });
@@ -75,6 +76,14 @@ export default function RegisterScreen() {
           disabled={register.isPending}
         />
       </Card>
+      {__DEV__ ? (
+        <Button
+          label="Skip login/signup"
+          icon="play-forward-outline"
+          variant="secondary"
+          onPress={() => void skipLocalAuth()}
+        />
+      ) : null}
     </Screen>
   );
 }

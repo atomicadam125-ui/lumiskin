@@ -5,7 +5,7 @@ set -euo pipefail
 #   bash start.sh
 #
 # This delegates setup to:
-#   backend/start.sh  - FastAPI API plus CV service
+#   backend/start.sh  - FastAPI API
 #   app/start.sh      - Expo development server
 #
 # Expo arguments can be passed through:

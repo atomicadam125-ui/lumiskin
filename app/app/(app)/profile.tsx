@@ -43,7 +43,7 @@ export default function ProfileSettingsScreen() {
       </Card>
       <Card>
         <AppText variant="subtitle">Privacy controls</AppText>
-        <SettingRow label="Private S3 image storage" value="Enabled" />
+        <SettingRow label="Private local image storage" value="Enabled" />
         <SettingRow label="JWT session protection" value="Enabled" />
         <SettingRow label="Medical disclaimer" value="Always shown" />
         {appConfig.privacyPolicyUrl ? (

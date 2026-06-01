@@ -69,7 +69,7 @@ def test_complete_skincare_flow(client: TestClient) -> None:
     assert len(history["recommendations"]) == 1
 
 
-def test_analysis_accepts_cv_scores(client: TestClient) -> None:
+def test_analysis_uses_openai_image_scores(client: TestClient) -> None:
     headers = auth_headers(client)
     upload_response = client.post(
         "/api/v1/uploads/images",
@@ -83,16 +83,6 @@ def test_analysis_accepts_cv_scores(client: TestClient) -> None:
         headers=headers,
         json={
             "photo_id": photo_id,
-            "scores": {
-                "acne_score": 72,
-                "redness_score": 30,
-                "pigmentation_score": 40,
-                "wrinkle_score": 15,
-                "oiliness_score": 70,
-                "dryness_score": 20,
-                "confidence": 88,
-            },
-            "model_versions": {"cv_service": "test-v1"},
         },
     )
 
@@ -100,7 +90,9 @@ def test_analysis_accepts_cv_scores(client: TestClient) -> None:
     analysis = analysis_response.json()
     assert analysis["scores"]["acne"]["score"] == 0.72
     assert analysis["scores"]["acne"]["severity"] == "moderate"
-    assert analysis["model_versions"]["cv_service"] == "test-v1"
+    assert analysis["model_versions"]["analysis_provider"] == "openai"
+    assert analysis["model_versions"]["openai_model"] == "fake-vision-model"
+    assert analysis["skin_profile"]["recommended_products"][0]["brand"] == "COSRX"
 
 
 def test_analysis_accepts_three_capture_angles(client: TestClient) -> None:

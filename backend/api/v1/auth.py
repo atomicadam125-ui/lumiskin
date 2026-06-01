@@ -7,7 +7,7 @@ from models.user import User
 from schemas.auth import AppleLoginRequest, LoginRequest, RegisterRequest, TokenResponse
 from schemas.user import UserRead
 from services.auth_service import AuthService
-from services.s3_service import S3StorageService
+from services.image_storage_service import LocalImageStorageService
 
 router = APIRouter()
 
@@ -36,6 +36,6 @@ def me(current_user: User = Depends(get_current_user)) -> User:
 def delete_me(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    storage: S3StorageService = Depends(get_storage_service),
+    storage: LocalImageStorageService = Depends(get_storage_service),
 ) -> None:
     AuthService(db).delete_account(current_user, storage)

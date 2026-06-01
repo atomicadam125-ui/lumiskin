@@ -3,14 +3,14 @@ from sqlalchemy.orm import Session
 
 from models.photo import Photo
 from models.user import User
-from services.s3_service import S3StorageService
+from services.image_storage_service import LocalImageStorageService
 
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
 class PhotoService:
-    def __init__(self, db: Session, storage: S3StorageService):
+    def __init__(self, db: Session, storage: LocalImageStorageService):
         self.db = db
         self.storage = storage
 
@@ -28,7 +28,7 @@ class PhotoService:
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Image is too large"
             )
 
-        s3_key = self.storage.upload_user_image(user.id, data, file.content_type)
+        s3_key = self.storage.save_user_image(user.id, data, file.content_type)
         photo = Photo(
             user_id=user.id,
             s3_key=s3_key,

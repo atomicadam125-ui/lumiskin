@@ -9,6 +9,7 @@ htmlcov/
 local_uploads/
 backend/.venv/
 backend/.env
+backend/.cache/
 backend/local_uploads/
 app/node_modules/
 app/.expo/

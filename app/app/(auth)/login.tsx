@@ -9,12 +9,13 @@ import { Card } from "@/components/Card";
 import { Screen } from "@/components/Screen";
 import { TextField } from "@/components/TextField";
 import { spacing } from "@/constants/theme";
-import { useLogin } from "@/hooks/useAuth";
+import { useLogin, useSkipLocalAuth } from "@/hooks/useAuth";
 
 type LoginForm = { email: string; password: string };
 
 export default function LoginScreen() {
   const login = useLogin();
+  const skipLocalAuth = useSkipLocalAuth();
   const { control, handleSubmit } = useForm<LoginForm>({
     defaultValues: { email: "", password: "" },
   });
@@ -69,6 +70,14 @@ export default function LoginScreen() {
         />
         <AppleSignInButton />
       </Card>
+      {__DEV__ ? (
+        <Button
+          label="Skip login/signup"
+          icon="play-forward-outline"
+          variant="secondary"
+          onPress={() => void skipLocalAuth()}
+        />
+      ) : null}
       <Button
         label="Create account"
         variant="ghost"

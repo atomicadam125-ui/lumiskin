@@ -63,6 +63,20 @@ export function useRegister() {
   return useMutation({ mutationFn: AuthApi.register });
 }
 
+export function useSkipLocalAuth() {
+  const queryClient = useQueryClient();
+  const signIn = useAuthStore((state) => state.signIn);
+  const setUser = useAuthStore((state) => state.setUser);
+
+  return async () => {
+    await signIn("local-dev-bypass");
+    const user = await AuthApi.getMe();
+    setUser(user);
+    await queryClient.invalidateQueries({ queryKey: ["me"] });
+    router.replace("/(app)/camera");
+  };
+}
+
 export function useLogout() {
   const queryClient = useQueryClient();
   const signOut = useAuthStore((state) => state.signOut);

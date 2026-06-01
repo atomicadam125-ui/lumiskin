@@ -74,13 +74,7 @@ export default function AnalysisLoadingScreen() {
           questionnaire_id: savedQuestionnaire.id,
           photo_ids: [frontPhoto.id, leftPhoto.id, rightPhoto.id],
           scores: cvScores ?? undefined,
-          model_versions: cvScores
-            ? {
-                cv_service: "opencv-mediapipe-torch-v1",
-                capture_angles: "front,left,right",
-                score_fusion: "confidence_weighted_three_angle_v1",
-              }
-            : { capture_angles: "front,left,right" },
+          model_versions: { capture_angles: "front,left,right" },
         });
         setLatestAnalysis(analysis);
 

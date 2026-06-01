@@ -12,13 +12,17 @@ class AnalysisController:
     def __init__(
         self,
         db: Session,
-        storage: LocalImageStorageService,
-        analyzer: OpenAISkinAnalysisClient,
+        storage: LocalImageStorageService | None = None,
+        analyzer: OpenAISkinAnalysisClient | None = None,
     ):
-        self.service = AnalysisService(db, storage, analyzer)
+        self.db = db
+        self.storage = storage
+        self.analyzer = analyzer
 
     def create(self, user: User, payload: AnalysisCreate) -> Analysis:
-        return self.service.create(
+        if self.storage is None or self.analyzer is None:
+            raise RuntimeError("Analysis creation requires storage and analyzer services")
+        return AnalysisService(self.db, self.storage, self.analyzer).create(
             user,
             payload.photo_id,
             payload.questionnaire_id,
@@ -26,4 +30,4 @@ class AnalysisController:
         )
 
     def list_for_user(self, user: User) -> list[Analysis]:
-        return self.service.list_for_user(user)
+        return AnalysisService.list_for_user(self.db, user)

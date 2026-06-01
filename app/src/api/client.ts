@@ -8,11 +8,6 @@ export const api = axios.create({
   timeout: 30000,
 });
 
-export const cvApi = axios.create({
-  baseURL: appConfig.cvBaseUrl,
-  timeout: 30000,
-});
-
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) {

@@ -15,6 +15,11 @@ set -euo pipefail
 # Pass Expo arguments through after the script name:
 #   bash start.sh --web
 #   bash start.sh --ios
+#
+# For Expo Go on a physical phone, localhost points to the phone, not your Mac.
+# Point the app at your backend with one of these:
+#   EXPO_PUBLIC_API_BASE_URL=http://YOUR_MAC_LAN_IP:8000/api/v1 bash start.sh --lan
+#   EXPO_PUBLIC_API_BASE_URL=https://YOUR_NGROK_DOMAIN.ngrok-free.app/api/v1 bash start.sh --tunnel
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"

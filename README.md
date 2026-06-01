@@ -2,10 +2,10 @@
 
 LumiSkin AI is an MVP skincare analysis product with two local applications:
 
-- `backend/`: FastAPI API plus the computer-vision service.
+- `backend/`: FastAPI API for auth, uploads, questionnaires, OpenAI image analysis, and history.
 - `app/`: React Native Expo mobile app.
 
-The local workflow is intentionally simple: no Docker, no external database requirement, and no extra process manager. The backend defaults to SQLite at `backend/preview.db` so a fresh laptop can run the project quickly.
+The local workflow is intentionally simple: no Docker, no external database requirement, no S3, and no separate computer-vision process. The backend defaults to SQLite at `backend/preview.db` and local image storage under `backend/local_uploads/`.
 
 ## Quick Start
 
@@ -19,8 +19,6 @@ That starts:
 
 - API: `http://localhost:8000`
 - API health check: `http://localhost:8000/health`
-- Computer vision service: `http://localhost:8010`
-- CV health check: `http://localhost:8010/health`
 - Expo dev server: `http://localhost:8081`
 
 You can also start each side separately:
@@ -35,57 +33,35 @@ cd app
 bash start.sh
 ```
 
-Pass Expo flags through the app script:
-
-```bash
-cd app
-bash start.sh --web
-bash start.sh --ios
-bash start.sh --android
-```
-
-## New Laptop Setup
-
-The shell profile has aliases so `python` and `pip` resolve to Python 3:
-
-```bash
-alias python="python3"
-alias pip="pip3"
-```
-
-Required local tools:
-
-- Python 3.12+
-- Node.js and npm
-- Expo runs through `npx expo`, so no global Expo install is required.
-
 ## Backend
 
-The backend lives in `backend/` and contains:
+The backend is organized around thin routes, request controllers, SQLAlchemy models, and services:
 
-- `main.py`: FastAPI API entrypoint.
-- `api/`: API routes and dependencies.
-- `models/`, `schemas/`, `services/`, `db/`, `core/`: backend domain layers.
-- `cv_service/`: separate FastAPI service for image analysis.
-- `tests/`: backend test suite.
-- `start.sh`: local backend startup script.
+- `api/`: FastAPI route declarations and dependencies.
+- `controllers/`: request orchestration for route handlers.
+- `models/`: database entities.
+- `schemas/`: Pydantic request/response and OpenAI structured-output models.
+- `services/`: local image storage, OpenAI analysis, auth, questionnaire, history, and recommendation logic.
 
-`backend/start.sh` does the setup work systematically:
+`backend/start.sh` does the setup work:
 
 - Creates `backend/.venv` if needed.
 - Installs `backend/requirements.txt`.
 - Creates `backend/.env` from `backend/.env.example` if needed.
 - Initializes the local SQLite database.
 - Starts the API on port `8000`.
-- Starts the CV service on port `8010`.
 
-Configuration is in `backend/.env`. The MVP default uses:
+The important backend environment variables are:
 
 ```env
+ENVIRONMENT=local
 DATABASE_URL=sqlite+pysqlite:///./preview.db
-STORAGE_BACKEND=local
-LOCAL_UPLOAD_DIR=local_uploads
+SECRET_KEY=change-me-use-a-long-random-secret-at-least-32-chars
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4.1-mini
 ```
+
+Everything else has a local MVP default in `backend/core/config.py`.
 
 Run backend tests:
 
@@ -94,28 +70,61 @@ cd backend
 .venv/bin/python -m pytest
 ```
 
+## OpenAI Analysis Flow
+
+The mobile app uploads front, left, and right face photos to `/api/v1/uploads/images`. When it calls `/api/v1/analyses`, the backend reads the stored images, sends them to OpenAI as image inputs, and asks for a structured response matching `schemas/skin_analysis.py`.
+
+The stored analysis includes:
+
+- Objective concern scores for acne, redness, hyperpigmentation, fine lines, pores, oiliness, and dryness.
+- Overall skin score and confidence.
+- Primary concerns and objective summary.
+- Routine steps.
+- Korean skincare product recommendations.
+- Dermatologist warning and cosmetic-use disclaimer.
+
+## Local Auth Bypass
+
+In development builds, the auth screens show `Skip login/signup`. It stores a fixed local-only token and sends you directly to the scan flow. The backend accepts that token only when `ENVIRONMENT=local`; production and preview environments still require normal auth.
+
 ## App
 
-The Expo app lives in `app/` and contains:
+The Expo app lives in `app/`.
 
-- `app/app/`: Expo Router screens.
-- `app/src/api/`: API clients for auth and skincare flows.
-- `app/src/components/`: reusable UI components.
-- `app/src/store/`: Zustand stores.
-- `app/start.sh`: local Expo startup script.
-
-`app/start.sh` checks Node/npm, installs dependencies when `node_modules` is missing, verifies Expo through `npx`, and starts the Expo dev server.
-
-The local API URLs are configured in `app/app.json`:
+The local API URL is configured in `app/app.json`:
 
 ```json
 {
-  "apiBaseUrl": "http://localhost:8000/api/v1",
-  "cvBaseUrl": "http://localhost:8010/v1"
+  "apiBaseUrl": "http://localhost:8000/api/v1"
 }
 ```
 
 For a physical phone, replace `localhost` with your Mac's LAN IP address.
+
+Expo Go on a physical phone cannot reach your Mac at `localhost`. Start the app with an explicit API URL:
+
+```bash
+cd app
+EXPO_PUBLIC_API_BASE_URL=http://YOUR_MAC_LAN_IP:8000/api/v1 bash start.sh --lan
+```
+
+When using a LAN IP, start the backend on all interfaces:
+
+```bash
+cd backend
+API_HOST=0.0.0.0 bash start.sh
+```
+
+Or use ngrok:
+
+```bash
+cd backend
+bash start.sh
+ngrok http 8000
+
+cd ../app
+EXPO_PUBLIC_API_BASE_URL=https://YOUR_NGROK_DOMAIN.ngrok-free.app/api/v1 bash start.sh --tunnel
+```
 
 Run app checks:
 
@@ -124,21 +133,6 @@ cd app
 npm run typecheck
 npx expo --version
 ```
-
-## Product Flow
-
-The mobile flow supports:
-
-- Email/password registration and login.
-- Native Sign in with Apple wiring for iOS.
-- Front, left, and right skincare photo capture/upload.
-- Questionnaire capture.
-- Computer-vision scoring.
-- Recommendation generation.
-- Progress/history views.
-- Account deletion.
-
-The recommendation output is display-oriented and includes skin snapshot, scores, tier, improvement potential, routine steps, product cards, warnings, and a non-medical disclaimer.
 
 ## Useful Commands
 

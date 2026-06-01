@@ -33,7 +33,7 @@ export async function estimateImageConfidence(uri: string, cvScores?: CVAnalysis
     return cvScores.confidence;
   }
 
-  const info = await FileSystem.getInfoAsync(uri, { size: true });
+  const info = await FileSystem.getInfoAsync(uri);
   if (!info.exists) {
     return 0;
   }

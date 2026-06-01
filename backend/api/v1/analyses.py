@@ -3,15 +3,21 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api.deps import get_current_user, get_recommendation_client
+from api.deps import (
+    get_current_user,
+    get_recommendation_client,
+    get_skin_analysis_client,
+    get_storage_service,
+)
+from controllers.analysis_controller import AnalysisController
 from db.session import get_db
 from models.analysis import Analysis
 from models.recommendation import Recommendation
 from models.user import User
 from schemas.analysis import AnalysisCreate, AnalysisRead
 from schemas.recommendation import RecommendationRead
-from services.analysis_service import AnalysisService
-from services.openai_service import OpenAIRecommendationClient
+from services.image_storage_service import LocalImageStorageService
+from services.openai_service import OpenAIRecommendationClient, OpenAISkinAnalysisClient
 from services.recommendation_service import RecommendationService
 
 router = APIRouter()
@@ -22,15 +28,10 @@ def create_analysis(
     payload: AnalysisCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    storage: LocalImageStorageService = Depends(get_storage_service),
+    analyzer: OpenAISkinAnalysisClient = Depends(get_skin_analysis_client),
 ) -> Analysis:
-    return AnalysisService(db).create(
-        current_user,
-        payload.photo_id,
-        payload.questionnaire_id,
-        photo_ids=payload.photo_ids,
-        scores=payload.scores,
-        model_versions=payload.model_versions,
-    )
+    return AnalysisController(db, storage, analyzer).create(current_user, payload)
 
 
 @router.get("", response_model=list[AnalysisRead])
@@ -38,7 +39,7 @@ def list_analyses(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[Analysis]:
-    return AnalysisService(db).list_for_user(current_user)
+    return AnalysisController(db).list_for_user(current_user)
 
 
 @router.post("/{analysis_id}/recommendations", response_model=RecommendationRead, status_code=201)
