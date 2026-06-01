@@ -1,0 +1,7 @@
+fastapi[standard]>=0.112.0
+numpy>=1.26.4
+opencv-python-headless>=4.10.0.84
+mediapipe>=0.10.14
+pydantic-settings>=2.4.0
+python-multipart>=0.0.9
+torch>=2.3.1

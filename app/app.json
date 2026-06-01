@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "LumiSkin AI",
+    "slug": "lumiskin-ai",
+    "scheme": "lumiskin",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "LumiSkin uses the camera to capture front and side selfies for cosmetic skin analysis and progress tracking.",
+        "NSPhotoLibraryUsageDescription": "LumiSkin lets you upload front and side selfies from your photo library for cosmetic skin analysis."
+      }
+    },
+    "android": {
+      "permissions": ["CAMERA", "READ_MEDIA_IMAGES"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-camera",
+      "expo-image-picker",
+      "expo-apple-authentication"
+    ],
+    "extra": {
+      "apiBaseUrl": "http://localhost:8000/api/v1",
+      "cvBaseUrl": "http://localhost:8010/v1",
+      "privacyPolicyUrl": ""
+    }
+  }
+}
